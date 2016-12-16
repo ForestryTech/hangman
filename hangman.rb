@@ -17,7 +17,7 @@ class Game
         @player = Player.new(getPlayerName)
         @saved_games = getSavedGames
         @game_state = GameState.new
-        puts @game_state   .player
+        #puts @game_state.player
         #puts @saved_games
     end
     
@@ -39,8 +39,8 @@ class Game
             word_to_guess = words[Random.rand(words.length).to_i]
             got_word = true unless (word_to_guess.length < 5 || word_to_guess.length > 11)
         end
-        return word_to_guess
-    end
+        return word_to_guess.downcase
+    end 
 
     def playGame
         quit_game = false
@@ -77,11 +77,24 @@ class Game
 
         return if quit_game
         puts @game_state.word
+        word_len = @game_state.word.length
+        puts "Length of word: #{word_len}"
         puts @game_state.status
+        guess_made = 0
+        guess_left = 0
         while @game_state.status === "PLAYING"
-            guess = @player.get_letter
+            guess = @player.get_letter.downcase
             if @game_state.word.include?(guess)
                 puts "That was a good guess!"
+            else
+                puts "#{guess} was not in the word."
+                guess_made = guess_made + 1
+            end
+            guess_left = word_len - guess_made
+            puts "There are #{guess_left} guesses left."
+            if guess_made >= word_len
+                @game_state.status = "LOST"
+                
             end
         end
 
