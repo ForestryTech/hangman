@@ -49,6 +49,27 @@ class Game
         return word_to_guess.downcase
     end 
 
+    def get_guess()
+        bad_input = true
+
+        puts "Make a guess. The letters left are: "
+        print_letters_left(@guess)
+        puts "If you would like to save your game type: 1"
+        puts "If you would like to quit type: 2"
+        puts "There are #{@guess_left} wrong guesses left."
+        puts "\n-------------------------------------"
+
+        while bad_input
+            print "-->"
+            @guess = @player.get_letter.downcase
+            if @guess === '1' || @game_state.alphabet_array.include?(@guess) || @guess === '2'
+                bad_input = false
+            else
+                puts "#{@guess} is not a valid guess. Please try again."
+            end
+        end
+    end
+
     def playGame
         quit_game = false
         game_to_load = Array.new
@@ -87,59 +108,66 @@ class Game
         word_len = @game_state.word.length
         #puts "Length of word: #{word_len}"
         #puts @game_state.status
-        guess_made = 0
-        guess_left = @game_state.word.length
-        guess = ""
+        @guess_made = 0
+        @game_state.guesses_left = @game_state.word.length
+        @guess = ""
         while @game_state.status === "PLAYING"
-            puts "Make a guess. The letters left are: "
-            print_letters_left(guess)
-            puts "There are #{guess_left} wrong guesses left."
-        
             
-            puts "\n-------------------------------------"
-            guess = @player.get_letter.downcase
-            
-            if @game_state.word.include?(guess)
-                puts "That was a good guess!"
-            else
-                puts "#{guess} was not in the word."
-                guess_made = guess_made + 1
-                
-            end
-            guess_left = word_len - guess_made
-            
-            print_letters_guessed(guess)
-            @game_state.status = "WON" unless @game_state.letters_guessed.include?("_")
+            get_guess
 
-            
-            if guess_made >= word_len
-                @game_state.status = "LOST"
+            if @guess === '1'
+                #save game
+                saveGame
+            elsif @guess === '2'
+                #quit
+                @game_state.status = "QUIT"
+            else
+
+                if @game_state.word.include?(@guess)
+                    puts "That was a good guess!"
+                else
+                    puts "#{@guess} was not in the word."
+                    @guess_made = @guess_made + 1
+                end
+                @game_state.guesses_left = word_len - @guess_made
                 
+                print_letters_guessed(@guess)
+                @game_state.status = "WON" unless @game_state.letters_guessed.include?("_")
+
+                
+                if @guess_made >= word_len
+                    @game_state.status = "LOST"
+                    
+                end
             end
         end
 
         if @game_state.status === "WON"
             puts "Congratulations! You Won!"
-        else
+        elsif @game_state.status === "LOST"
             puts "Sorry, you did not guess the word.\nThe word is #{@game_state.word}"
+        else
+            puts "Thanks for playing."
         end
 
     end
     
     def print_letters_left(guess)
         @game_state.alphabet_array.each_index do |i|
-            if @game_state.alphabet_array[i] === guess
+            if @game_state.alphabet_array[i] === @guess
                 @game_state.alphabet_array[i] = '*'
             end
             print "#{@game_state.alphabet_array[i]} "
         end
         puts "\n-----------------------------------------------"
     end
+
+
     def print_letters_guessed(guess)
         word_array = @game_state.word.split("")
         word_array.each_with_index do |letter, i|
             if letter === guess
-                @game_state.letters_guessed[i] = guess
+                @game_state.letters_guessed[i] = @guess
             end
         end
         puts "Letters guessed so far."
@@ -156,7 +184,13 @@ class Game
     end
     
     def saveGame
-
+        print "Enter a name for your save: "
+        f_name = gets.chomp
+        f_name = "saves/" + f_name + ".hm"
+        File.open(f_name, "w") do |f|
+            f.puts @game_state.to_json
+        end
+        puts "\nGame saved."
     end
 
     def loadGame
@@ -215,7 +249,7 @@ class Player
     end
 
     def get_letter
-        puts "Enter a letter: "
+        #puts "Enter a letter: "
         letter = gets.chomp
         #@gussed_letters << letter
         #return letter
