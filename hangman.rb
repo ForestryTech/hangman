@@ -56,7 +56,7 @@ class Game
         print_letters_left(@guess)
         puts "If you would like to save your game type: 1"
         puts "If you would like to quit type: 2"
-        puts "There are #{@guess_left} wrong guesses left."
+        puts "There are #{@game_state.guesses_left} wrong guesses left."
         puts "\n-------------------------------------"
 
         while bad_input
@@ -78,7 +78,7 @@ class Game
         elsif
             cont = true
             puts "There are saved games."
-            saved_games.each_with_index do |file, i|
+            @saved_games.each_with_index do |file, i|
                 puts "#{i} - #{file}"
                 game_to_load[i] = i.to_s
             end
@@ -91,6 +91,7 @@ class Game
                 puts ans
                 if game_to_load.include?(ans)
                     puts "Should load game here."
+                    loadGame(ans.to_i)
                     cont = false
                 elsif ans === "N"
                     startNewGame
@@ -193,8 +194,15 @@ class Game
         puts "\nGame saved."
     end
 
-    def loadGame
-
+    def loadGame(index)
+        f_name = @saved_games[index]
+        f_name = "saves/" + f_name
+        puts "Should load #{f_name}"
+        l = File.readlines f_name
+        @game_state.from_json(l[0])
+        puts "Game loaded."
+        @game_state.letters_guessed.each {|l| print l}
+        puts
     end
 
     def getPlayerName
